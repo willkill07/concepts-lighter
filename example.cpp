@@ -1,67 +1,127 @@
 #include "concepts.hpp"
 
+namespace RAJA {
 namespace concepts {
 namespace detail {
+namespace iter {
 
-  RAJA_DEFINE_CONCEPT((T,U), Comparable, \
-                      RAJA_CONCEPT_VAL(U) < RAJA_CONCEPT_VAL(T), \
-                      RAJA_CONCEPT_VAL(T) < RAJA_CONCEPT_VAL(U), \
-                      RAJA_CONCEPT_VAL(U) <= RAJA_CONCEPT_VAL(T), \
-                      RAJA_CONCEPT_VAL(T) <= RAJA_CONCEPT_VAL(U), \
-                      RAJA_CONCEPT_VAL(U) > RAJA_CONCEPT_VAL(T), \
-                      RAJA_CONCEPT_VAL(T) > RAJA_CONCEPT_VAL(U), \
-                      RAJA_CONCEPT_VAL(U) >= RAJA_CONCEPT_VAL(T), \
-                      RAJA_CONCEPT_VAL(T) >= RAJA_CONCEPT_VAL(U), \
-                      RAJA_CONCEPT_VAL(U) == RAJA_CONCEPT_VAL(T), \
-                      RAJA_CONCEPT_VAL(T) == RAJA_CONCEPT_VAL(U), \
-                      RAJA_CONCEPT_VAL(U) != RAJA_CONCEPT_VAL(T), \
-                      RAJA_CONCEPT_VAL(T) != RAJA_CONCEPT_VAL(U));
+// Iterator
 
-  RAJA_DEFINE_CONCEPT((T), Iterable,                \
-                      RAJA_CONCEPT_REF(T).begin(),      \
-                      RAJA_CONCEPT_REF(T).end(),        \
-                      RAJA_CONCEPT_CREF(T).begin(),     \
-                      RAJA_CONCEPT_CREF(T).end());
+RAJA_DEFINE_CONCEPT((T), Dereferencable, *RAJA_CONCEPT_REF(T));
+RAJA_DEFINE_CONCEPT_EXACT((T), PreIncrementable, RAJA_CONCEPT_TYPE(T) &,
+                          ++RAJA_CONCEPT_REF(T));
 
-  RAJA_DEFINE_CONCEPT((T), HasMemberBegin, RAJA_CONCEPT_REF(T).begin());
-  RAJA_DEFINE_CONCEPT((T), HasMemberEnd, RAJA_CONCEPT_REF(T).end());
-  RAJA_DEFINE_CONCEPT((T), HasConstMemberBegin, RAJA_CONCEPT_CREF(T).begin());
-  RAJA_DEFINE_CONCEPT((T), HasConstMemberEnd, RAJA_CONCEPT_CREF(T).end());
+// ForwardIterator
 
-}
+RAJA_DEFINE_CONCEPT_EXACT((T), PostIncrementable, RAJA_CONCEPT_TYPE(T),
+                          RAJA_CONCEPT_VAL(T)++);
+RAJA_DEFINE_CONCEPT_EXACT((Iter, Ref), PostIncrementDereferencable,
+                          RAJA_CONCEPT_TYPE(Ref), *RAJA_CONCEPT_VAL(Iter)++);
 
-template <typename Container>
-struct Range : RAJA::requires<detail::HasMemberEnd<Container>,
-                              detail::HasMemberBegin<Container>,
-                              detail::HasConstMemberEnd<Container>,
-                              detail::HasConstMemberBegin<Container>> {
-};
+// BidirectionalIterator
 
-template <typename Container>
-struct Iterable : detail::Iterable<Container> {
-};
+RAJA_DEFINE_CONCEPT_EXACT((T), PreDecrementable, RAJA_CONCEPT_TYPE(T) &,
+                          --RAJA_CONCEPT_VAL(T));
+RAJA_DEFINE_CONCEPT_CONVERTIBLE((T), PostDecrementable,
+                                RAJA_CONCEPT_TYPE(T) const &,
+                                RAJA_CONCEPT_VAL(T)--);
+RAJA_DEFINE_CONCEPT_EXACT((Iter, Ref), PostDecrementDereferencable,
+                          RAJA_CONCEPT_TYPE(Ref), *RAJA_CONCEPT_VAL(Iter)--);
 
-template <typename T, typename U = T>
-struct Comparable : detail::Comparable<T,U> {
-};
+// RandomAccessIterator
 
-}
+RAJA_DEFINE_CONCEPT_EXACT((Iter, DiffType), HasPlusEquals,
+                          RAJA_CONCEPT_TYPE(Iter) &,
+                          RAJA_CONCEPT_REF(Iter) += RAJA_CONCEPT_VAL(DiffType));
+RAJA_DEFINE_CONCEPT_EXACT((Iter, DiffType), HasPlusLhs, RAJA_CONCEPT_TYPE(Iter),
+                          RAJA_CONCEPT_VAL(Iter) + RAJA_CONCEPT_VAL(DiffType));
+RAJA_DEFINE_CONCEPT_EXACT((Iter, DiffType), HasPlusRhs, RAJA_CONCEPT_TYPE(Iter),
+                          RAJA_CONCEPT_VAL(DiffType) + RAJA_CONCEPT_VAL(Iter));
+RAJA_DEFINE_CONCEPT_EXACT((Iter, DiffType), HasMinusEquals,
+                          RAJA_CONCEPT_TYPE(Iter) &,
+                          RAJA_CONCEPT_REF(Iter) -= RAJA_CONCEPT_VAL(DiffType));
+RAJA_DEFINE_CONCEPT_EXACT((Iter, DiffType), HasMinusLhs,
+                          RAJA_CONCEPT_TYPE(Iter),
+                          RAJA_CONCEPT_VAL(Iter) - RAJA_CONCEPT_VAL(DiffType));
+RAJA_DEFINE_CONCEPT_EXACT((Iter, DiffType), HasMinusRhs,
+                          RAJA_CONCEPT_TYPE(Iter),
+                          RAJA_CONCEPT_VAL(DiffType) - RAJA_CONCEPT_VAL(Iter));
+RAJA_DEFINE_CONCEPT_CONVERTIBLE((Iter, Ref, Diff), HasIndexOp,
+                                RAJA_CONCEPT_TYPE(Ref),
+                                RAJA_CONCEPT_VAL(Iter)[RAJA_CONCEPT_VAL(Diff)]);
+} // end namespace iter
 
-#include <iostream>
-#include <vector>
+namespace comp {
 
-struct MyThing {
-  bool operator< (MyThing) { return true; }
-  bool operator<= (MyThing) { return true; }
-  bool operator> (MyThing) { return true; }
-  bool operator>= (MyThing) { return true; }
-  bool operator!= (MyThing) { return true; }
-};
+  RAJA_DEFINE_CONCEPT_CONVERTIBLE((T), LessThanComparable, bool,
+                                  RAJA_CONCEPT_VAL(T) < RAJA_CONCEPT_VAL(T));
+  RAJA_DEFINE_CONCEPT_CONVERTIBLE((T), GreaterThanComparable, bool,
+                                  RAJA_CONCEPT_VAL(T) > RAJA_CONCEPT_VAL(T));
+  RAJA_DEFINE_CONCEPT_CONVERTIBLE((T), LessEqualComparable, bool,
+                                  RAJA_CONCEPT_VAL(T) <= RAJA_CONCEPT_VAL(T));
+  RAJA_DEFINE_CONCEPT_CONVERTIBLE((T), GreaterEqualComparable, bool,
+                                  RAJA_CONCEPT_VAL(T) >= RAJA_CONCEPT_VAL(T));
+  RAJA_DEFINE_CONCEPT_CONVERTIBLE((T), EqualityComparable, bool,
+                                  RAJA_CONCEPT_VAL(T) == RAJA_CONCEPT_VAL(T));
+} // end namespace comp
 
-static_assert(concepts::Range<std::vector<int>>::value, "This should not fail");
-static_assert(concepts::Range<int>::value, "This should fail");
-static_assert(concepts::Iterable<std::vector<int>>::value, "This should not fail");
-static_assert(concepts::Iterable<int>::value, "This should fail");
-static_assert(concepts::Comparable<int,double>::value, "This should not fail");
-static_assert(concepts::Comparable<MyThing, MyThing>::value, "This should fail");
-static_assert(concepts::Comparable<int, double>::value, "This should not fail");
+template <typename Iter>
+using Iterator =
+    RAJA::requires<iter::Dereferencable<Iter>, iter::PreIncrementable<Iter>>;
+
+template <typename Iter>
+using ForwardIterator =
+    RAJA::requires<Iterator<Iter>, iter::PostIncrementable<Iter>,
+                   iter::PostIncrementDereferencable<
+                       Iter, typename std::iterator_traits<Iter>::reference>>;
+
+template <typename Iter>
+using BidirectionalIterator =
+    RAJA::requires<ForwardIterator<Iter>, iter::PreDecrementable<Iter>,
+                   iter::PostDecrementable<Iter>,
+                   iter::PostIncrementDereferencable<
+                       Iter, typename std::iterator_traits<Iter>::reference>>;
+
+template <typename Iter, typename Diff, typename Ref>
+using _RandomAccessIterator =
+    RAJA::requires<BidirectionalIterator<Iter>, iter::HasPlusEquals<Iter, Diff>,
+                   iter::HasPlusLhs<Iter, Diff>, iter::HasPlusRhs<Iter, Diff>,
+                   iter::HasMinusEquals<Iter, Diff>,
+                   iter::HasMinusLhs<Iter, Diff>, iter::HasMinusRhs<Iter, Diff>,
+                   iter::HasIndexOp<Iter, Ref, Diff>,
+                   comp::LessEqualComparable<Iter>,
+                   comp::LessThanComparable<Iter>,
+                   comp::GreaterEqualComparable<Iter>,
+                   comp::GreaterThanComparable<Iter>>;
+
+template <typename Iter>
+using RandomAccessIterator =
+    _RandomAccessIterator<Iter,
+                          typename std::iterator_traits<Iter>::difference_type,
+                          typename std::iterator_traits<Iter>::reference>;
+
+RAJA_DEFINE_CONCEPT((T, U), Comparable,
+                    RAJA_CONCEPT_VAL(U) < RAJA_CONCEPT_VAL(T),
+                    RAJA_CONCEPT_VAL(T) < RAJA_CONCEPT_VAL(U),
+                    RAJA_CONCEPT_VAL(U) <= RAJA_CONCEPT_VAL(T),
+                    RAJA_CONCEPT_VAL(T) <= RAJA_CONCEPT_VAL(U),
+                    RAJA_CONCEPT_VAL(U) > RAJA_CONCEPT_VAL(T),
+                    RAJA_CONCEPT_VAL(T) > RAJA_CONCEPT_VAL(U),
+                    RAJA_CONCEPT_VAL(U) >= RAJA_CONCEPT_VAL(T),
+                    RAJA_CONCEPT_VAL(T) >= RAJA_CONCEPT_VAL(U),
+                    RAJA_CONCEPT_VAL(U) == RAJA_CONCEPT_VAL(T),
+                    RAJA_CONCEPT_VAL(T) == RAJA_CONCEPT_VAL(U),
+                    RAJA_CONCEPT_VAL(U) != RAJA_CONCEPT_VAL(T),
+                    RAJA_CONCEPT_VAL(T) != RAJA_CONCEPT_VAL(U));
+
+} // end namespace detail
+
+using detail::Iterator;
+using detail::ForwardIterator;
+using detail::BidirectionalIterator;
+using detail::RandomAccessIterator;
+using detail::Comparable;
+
+} // end namespace concepts
+
+} // end namespace RAJA

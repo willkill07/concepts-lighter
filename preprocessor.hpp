@@ -1,6 +1,8 @@
 #ifndef PREPROCESSOR_HPP_
 #define PREPROCESSOR_HPP_
 
+// Code from http://jhnet.co.uk/articles/cpp_magic
+
 #define FIRST(a, ...) a
 #define SECOND(a, b, ...) b
 
