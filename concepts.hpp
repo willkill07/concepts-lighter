@@ -1,49 +1,104 @@
-#include "detector.hpp"
-#include "preprocessor.hpp"
-
-#define RAJA_CONCEPT_TYPE(X) RAJA_CONCEPT_TYPE_ ## X
-#define __RAJA_INTERNAL_PREFIX_TYPENAME(X) typename RAJA_CONCEPT_TYPE(X)
-
-#define RAJA_CONCEPT_REF(X) std::declval<RAJA_CONCEPT_TYPE(X)&>()
-#define RAJA_CONCEPT_CREF(X) std::declval<RAJA_CONCEPT_TYPE(X) const&>()
-#define RAJA_CONCEPT_VAL(X) std::declval<RAJA_CONCEPT_TYPE(X)>()
-
-#define __RAJA_INTERNAL_CONCEPT_TEMPLATE(...) \
-  template<MAP_WITH_COMMA(__RAJA_INTERNAL_PREFIX_TYPENAME, __VA_ARGS__)>
-
-#define __RAJA_INTERNAL_CONCEPT_INSTANCE(...) \
-  MAP_WITH_COMMA(RAJA_CONCEPT_TYPE, __VA_ARGS__)
-
-#define RAJA_DEFINE_CONCEPT(TYPES, TAG, ...)\
-  EVAL(DEFER2(__RAJA_INTERNAL_CONCEPT_TEMPLATE)TYPES)   \
-    using ___ ## TAG ## _impl = decltype(__VA_ARGS__);      \
-  EVAL(DEFER2(__RAJA_INTERNAL_CONCEPT_TEMPLATE)TYPES)                   \
-    using TAG = is_detected< ___ ## TAG ## _impl, EVAL(DEFER1(__RAJA_INTERNAL_CONCEPT_INSTANCE)TYPES) >
-
-#define RAJA_DEFINE_CONCEPT_CONVERTIBLE(TYPES, TAG, RESULT, ...) \
-  EVAL(DEFER2(__RAJA_INTERNAL_CONCEPT_TEMPLATE)TYPES)   \
-    using ___ ## TAG ## _impl = decltype(__VA_ARGS__);      \
-  EVAL(DEFER2(__RAJA_INTERNAL_CONCEPT_TEMPLATE)TYPES)                   \
-    using TAG = is_detected_convertible< RESULT, ___ ## TAG ## _impl, EVAL(DEFER1(__RAJA_INTERNAL_CONCEPT_INSTANCE)TYPES) >
-
-#define RAJA_DEFINE_CONCEPT_EXACT(TYPES, TAG, RESULT, ...) \
-  EVAL(DEFER2(__RAJA_INTERNAL_CONCEPT_TEMPLATE)TYPES)   \
-    using ___ ## TAG ## _impl = decltype(__VA_ARGS__);      \
-  EVAL(DEFER2(__RAJA_INTERNAL_CONCEPT_TEMPLATE)TYPES)                   \
-    using TAG = is_detected_exact< RESULT, ___ ## TAG ## _impl, EVAL(DEFER1(__RAJA_INTERNAL_CONCEPT_INSTANCE)TYPES) >
+#include <type_traits>
 
 namespace RAJA {
+namespace concepts {
+namespace detail {
+namespace meta {
+
+template <typename...> struct list;
+
+template <bool B> using bool_ = std::integral_constant<bool, B>;
+
 namespace impl {
+#ifdef __clang__
+// Clang is faster with this implementation
+template <typename, typename = bool> struct _if_ {};
 
-template <bool...>
-struct blist;
+template <typename If>
+struct _if_<list<If>, decltype(bool(If::type::value))>
+    : std::enable_if<If::type::value> {};
 
-template <typename ... Bs>
-using all_of_t = std::is_same<blist<true, Bs::value...>, blist<Bs::value..., true>>;
+template <typename If, typename Then>
+struct _if_<list<If, Then>, decltype(bool(If::type::value))>
+    : std::enable_if<If::type::value, Then> {};
 
+template <typename If, typename Then, typename Else>
+struct _if_<list<If, Then, Else>, decltype(bool(If::type::value))>
+    : std::conditional<If::type::value, Then, Else> {};
+#else
+// GCC seems to prefer this implementation
+template <typename, typename = std::true_type> struct _if_ {};
+
+template <typename If> struct _if_<list<If>, bool_<If::type::value>> {
+  using type = void;
+};
+
+template <typename If, typename Then>
+struct _if_<list<If, Then>, bool_<If::type::value>> {
+  using type = Then;
+};
+
+template <typename If, typename Then, typename Else>
+struct _if_<list<If, Then, Else>, bool_<If::type::value>> {
+  using type = Then;
+};
+
+template <typename If, typename Then, typename Else>
+struct _if_<list<If, Then, Else>, bool_<!If::type::value>> {
+  using type = Else;
+};
+#endif
+} // namespace detail
+
+template <typename... Ts> using if_ = typename impl::_if_<list<Ts...>>::type;
+
+template <bool If, typename... Args>
+using if_c = typename impl::_if_<list<bool_<If>, Args...>>::type;
+
+constexpr struct valid_expr_t {
+  template <typename... T> std::true_type operator()(T &&...) const;
+} valid_expr{};
+
+constexpr struct is_true_t {
+  template <typename Bool_>
+  auto operator()(Bool_) const -> if_c<Bool_::value, std::true_type>;
+} is_true{};
+
+constexpr struct is_false_t {
+  template <typename Bool_>
+  auto operator()(Bool_) const -> if_c<!Bool_::value, std::true_type>;
+} is_false{};
+
+template <typename Ret, typename T> Ret returns(T const &);
+
+template <typename T, typename U>
+auto convertible_to(U &&u) -> decltype(returns<std::true_type>(static_cast<T>((U &&) u)));
+
+template <typename T, typename U>
+auto has_type(U &&) -> if_<std::is_same<T, U>, std::true_type>;
+
+
+template <bool...> struct blist;
+
+template <typename... Bs>
+using all_of_t =
+    std::is_same<blist<true, Bs::value...>, blist<Bs::value..., true>>;
+
+template <typename T>
+auto models() -> if_<std::is_same<std::true_type, T>, std::true_type>;
+
+} // meta
+
+template <typename T> auto Val() -> decltype(std::declval<T>()) {
+  return std::declval<T>();
+}
+template <typename T> auto Ref() -> decltype(std::declval<T &>()) {
+  return std::declval<T &>();
+}
+template <typename T> auto CRef() -> decltype(std::declval<T const &>()) {
+  return std::declval<T const &>();
 }
 
-template <typename ... Ts>
-using requires = impl::all_of_t<Ts...>;
-
-}
+} // detail
+} // concepts
+} // RAJA

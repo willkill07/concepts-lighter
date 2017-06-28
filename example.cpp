@@ -3,116 +3,80 @@
 namespace RAJA {
 namespace concepts {
 namespace detail {
-namespace iter {
 
-// Iterator
+using RAJA::concepts::detail::CRef;
+using RAJA::concepts::detail::Ref;
+using RAJA::concepts::detail::Val;
 
-RAJA_DEFINE_CONCEPT((T), Dereferencable, *RAJA_CONCEPT_REF(T));
-RAJA_DEFINE_CONCEPT_EXACT((T), PreIncrementable, RAJA_CONCEPT_TYPE(T) &,
-                          ++RAJA_CONCEPT_REF(T));
+using RAJA::concepts::detail::meta::convertible_to;
+using RAJA::concepts::detail::meta::has_type;
+using RAJA::concepts::detail::meta::models;
+using RAJA::concepts::detail::meta::returns;
+using RAJA::concepts::detail::meta::valid_expr;
 
-// ForwardIterator
+template <typename T>
+using LessThanComparable =
+    decltype(valid_expr(convertible_to<bool>(Val<T>() < Val<T>())));
 
-RAJA_DEFINE_CONCEPT_EXACT((T), PostIncrementable, RAJA_CONCEPT_TYPE(T),
-                          RAJA_CONCEPT_VAL(T)++);
-RAJA_DEFINE_CONCEPT_EXACT((Iter, Ref), PostIncrementDereferencable,
-                          RAJA_CONCEPT_TYPE(Ref), *RAJA_CONCEPT_VAL(Iter)++);
+template <typename T>
+using GreaterThanComparable =
+    decltype(valid_expr(convertible_to<bool>(Val<T>() > Val<T>())));
 
-// BidirectionalIterator
+template <typename T>
+using LessEqualComparable =
+    decltype(valid_expr(convertible_to<bool>(Val<T>() <= Val<T>())));
 
-RAJA_DEFINE_CONCEPT_EXACT((T), PreDecrementable, RAJA_CONCEPT_TYPE(T) &,
-                          --RAJA_CONCEPT_VAL(T));
-RAJA_DEFINE_CONCEPT_CONVERTIBLE((T), PostDecrementable,
-                                RAJA_CONCEPT_TYPE(T) const &,
-                                RAJA_CONCEPT_VAL(T)--);
-RAJA_DEFINE_CONCEPT_EXACT((Iter, Ref), PostDecrementDereferencable,
-                          RAJA_CONCEPT_TYPE(Ref), *RAJA_CONCEPT_VAL(Iter)--);
+template <typename T>
+using GreaterEqualComparable =
+    decltype(valid_expr(convertible_to<bool>(Val<T>() >= Val<T>())));
 
-// RandomAccessIterator
+template <typename T>
+using EqualityComparable =
+    decltype(valid_expr(convertible_to<bool>(Val<T>() == Val<T>())));
 
-RAJA_DEFINE_CONCEPT_EXACT((Iter, DiffType), HasPlusEquals,
-                          RAJA_CONCEPT_TYPE(Iter) &,
-                          RAJA_CONCEPT_REF(Iter) += RAJA_CONCEPT_VAL(DiffType));
-RAJA_DEFINE_CONCEPT_EXACT((Iter, DiffType), HasPlusLhs, RAJA_CONCEPT_TYPE(Iter),
-                          RAJA_CONCEPT_VAL(Iter) + RAJA_CONCEPT_VAL(DiffType));
-RAJA_DEFINE_CONCEPT_EXACT((Iter, DiffType), HasPlusRhs, RAJA_CONCEPT_TYPE(Iter),
-                          RAJA_CONCEPT_VAL(DiffType) + RAJA_CONCEPT_VAL(Iter));
-RAJA_DEFINE_CONCEPT_EXACT((Iter, DiffType), HasMinusEquals,
-                          RAJA_CONCEPT_TYPE(Iter) &,
-                          RAJA_CONCEPT_REF(Iter) -= RAJA_CONCEPT_VAL(DiffType));
-RAJA_DEFINE_CONCEPT_EXACT((Iter, DiffType), HasMinusLhs,
-                          RAJA_CONCEPT_TYPE(Iter),
-                          RAJA_CONCEPT_VAL(Iter) - RAJA_CONCEPT_VAL(DiffType));
-RAJA_DEFINE_CONCEPT_EXACT((Iter, DiffType), HasMinusRhs,
-                          RAJA_CONCEPT_TYPE(Iter),
-                          RAJA_CONCEPT_VAL(DiffType) - RAJA_CONCEPT_VAL(Iter));
-RAJA_DEFINE_CONCEPT_CONVERTIBLE((Iter, Ref, Diff), HasIndexOp,
-                                RAJA_CONCEPT_TYPE(Ref),
-                                RAJA_CONCEPT_VAL(Iter)[RAJA_CONCEPT_VAL(Diff)]);
-} // end namespace iter
+template <typename T, typename U>
+using ComparableTo = decltype(valid_expr(
+    convertible_to<bool>(Val<U>() <  Val<T>()),
+    convertible_to<bool>(Val<T>() <  Val<U>()),
+    convertible_to<bool>(Val<U>() <= Val<T>()),
+    convertible_to<bool>(Val<T>() <= Val<U>()),
+    convertible_to<bool>(Val<U>() >  Val<T>()),
+    convertible_to<bool>(Val<T>() >  Val<U>()),
+    convertible_to<bool>(Val<U>() >= Val<T>()),
+    convertible_to<bool>(Val<T>() >= Val<U>()),
+    convertible_to<bool>(Val<U>() == Val<T>()),
+    convertible_to<bool>(Val<T>() == Val<U>()),
+    convertible_to<bool>(Val<U>() != Val<T>()),
+    convertible_to<bool>(Val<T>() != Val<U>())));
 
-namespace comp {
+template <typename T> using Comparable = ComparableTo<T, T>;
 
-  RAJA_DEFINE_CONCEPT_CONVERTIBLE((T), LessThanComparable, bool,
-                                  RAJA_CONCEPT_VAL(T) < RAJA_CONCEPT_VAL(T));
-  RAJA_DEFINE_CONCEPT_CONVERTIBLE((T), GreaterThanComparable, bool,
-                                  RAJA_CONCEPT_VAL(T) > RAJA_CONCEPT_VAL(T));
-  RAJA_DEFINE_CONCEPT_CONVERTIBLE((T), LessEqualComparable, bool,
-                                  RAJA_CONCEPT_VAL(T) <= RAJA_CONCEPT_VAL(T));
-  RAJA_DEFINE_CONCEPT_CONVERTIBLE((T), GreaterEqualComparable, bool,
-                                  RAJA_CONCEPT_VAL(T) >= RAJA_CONCEPT_VAL(T));
-  RAJA_DEFINE_CONCEPT_CONVERTIBLE((T), EqualityComparable, bool,
-                                  RAJA_CONCEPT_VAL(T) == RAJA_CONCEPT_VAL(T));
-} // end namespace comp
+template <typename T>
+using Iterator = decltype(valid_expr(*Ref<T>(),
+                                     has_type<T &>(++Ref<T>())));
 
-template <typename Iter>
-using Iterator =
-    RAJA::requires<iter::Dereferencable<Iter>, iter::PreIncrementable<Iter>>;
-
-template <typename Iter>
+template <typename T>
 using ForwardIterator =
-    RAJA::requires<Iterator<Iter>, iter::PostIncrementable<Iter>,
-                   iter::PostIncrementDereferencable<
-                       Iter, typename std::iterator_traits<Iter>::reference>>;
+    decltype(valid_expr(models<Iterator<T>>(),
+                        Ref<T>()++,
+                        *Ref<T>()++));
 
-template <typename Iter>
+template <typename T>
 using BidirectionalIterator =
-    RAJA::requires<ForwardIterator<Iter>, iter::PreDecrementable<Iter>,
-                   iter::PostDecrementable<Iter>,
-                   iter::PostIncrementDereferencable<
-                       Iter, typename std::iterator_traits<Iter>::reference>>;
+    decltype(valid_expr(models<ForwardIterator<T>>(),
+                        has_type<T &>(--Ref<T>()),
+                        convertible_to<T const &>(Ref<T>()--),
+                        *Ref<T>()--));
 
-template <typename Iter, typename Diff, typename Ref>
-using _RandomAccessIterator =
-    RAJA::requires<BidirectionalIterator<Iter>, iter::HasPlusEquals<Iter, Diff>,
-                   iter::HasPlusLhs<Iter, Diff>, iter::HasPlusRhs<Iter, Diff>,
-                   iter::HasMinusEquals<Iter, Diff>,
-                   iter::HasMinusLhs<Iter, Diff>, iter::HasMinusRhs<Iter, Diff>,
-                   iter::HasIndexOp<Iter, Ref, Diff>,
-                   comp::LessEqualComparable<Iter>,
-                   comp::LessThanComparable<Iter>,
-                   comp::GreaterEqualComparable<Iter>,
-                   comp::GreaterThanComparable<Iter>>;
-
-template <typename Iter>
+template <typename T>
 using RandomAccessIterator =
-    _RandomAccessIterator<Iter,
-                          typename std::iterator_traits<Iter>::difference_type,
-                          typename std::iterator_traits<Iter>::reference>;
-
-RAJA_DEFINE_CONCEPT((T, U), Comparable,
-                    RAJA_CONCEPT_VAL(U) < RAJA_CONCEPT_VAL(T),
-                    RAJA_CONCEPT_VAL(T) < RAJA_CONCEPT_VAL(U),
-                    RAJA_CONCEPT_VAL(U) <= RAJA_CONCEPT_VAL(T),
-                    RAJA_CONCEPT_VAL(T) <= RAJA_CONCEPT_VAL(U),
-                    RAJA_CONCEPT_VAL(U) > RAJA_CONCEPT_VAL(T),
-                    RAJA_CONCEPT_VAL(T) > RAJA_CONCEPT_VAL(U),
-                    RAJA_CONCEPT_VAL(U) >= RAJA_CONCEPT_VAL(T),
-                    RAJA_CONCEPT_VAL(T) >= RAJA_CONCEPT_VAL(U),
-                    RAJA_CONCEPT_VAL(U) == RAJA_CONCEPT_VAL(T),
-                    RAJA_CONCEPT_VAL(T) == RAJA_CONCEPT_VAL(U),
-                    RAJA_CONCEPT_VAL(U) != RAJA_CONCEPT_VAL(T),
-                    RAJA_CONCEPT_VAL(T) != RAJA_CONCEPT_VAL(U));
+  decltype(valid_expr(models<BidirectionalIterator<T>>(),
+                      has_type<T &>(Ref<T>() += (Val<T>() - Val<T>())),
+                      has_type<T>(Val<T>() + (Val<T>() - Val<T>())),
+                      has_type<T>((Val<T>() - Val<T>()) + Val<T>()),
+                      has_type<T &>(Ref<T>() -= (Val<T>() - Val<T>())),
+                      has_type<T>(Val<T>() - (Val<T>() - Val<T>())),
+                      Val<T>()[(Val<T>() - Val<T>())]));
 
 } // end namespace detail
 
@@ -121,7 +85,21 @@ using detail::ForwardIterator;
 using detail::BidirectionalIterator;
 using detail::RandomAccessIterator;
 using detail::Comparable;
+using detail::ComparableTo;
+
+template <typename T, typename U> using DerivedFrom = std::is_base_of<U, T>;
+
+template <typename T, typename U>
+using ConvertibleTo = std::is_convertible<T, U>;
 
 } // end namespace concepts
 
 } // end namespace RAJA
+
+#include <vector>
+
+struct A {};
+
+static_assert(std::is_same<RAJA::concepts::RandomAccessIterator<int*>, std::true_type>::value, "Should not fail");
+static_assert(std::is_same<RAJA::concepts::RandomAccessIterator<std::vector<int>::iterator>, std::true_type>::value, "Should not fail");
+static_assert(std::is_same<RAJA::concepts::Comparable<A>, std::true_type>::value, "Should fail");
