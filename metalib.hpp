@@ -74,19 +74,23 @@ constexpr auto is_false(Bool_) -> if_c<!Bool_::value, std::true_type>;
 
 // concept checking functions
 
+/// metafunction for use within decltype expression to validate aribitrary expressions
 template <typename... T>
 constexpr std::true_type
 valid_expr(T &&...);
 
+/// helper metafunction for use within decltype expression for validation
 template <typename Ret, typename T>
 constexpr Ret
 returns(T const &);
 
+/// metafunction for use within decltype expression to validate return type is convertible to given type
 template <typename T, typename U>
 constexpr auto
 convertible_to(U &&u)
     -> decltype(returns<std::true_type>(static_cast<T>((U &&) u)));
 
+/// metafunction for use within decltype expression to validate type of expression
 template <typename T, typename U>
 constexpr auto has_type(U &&) -> if_<std::is_same<T, U>, std::true_type>;
 
@@ -99,6 +103,7 @@ template <typename... Bs>
 using all_of_t =
     std::is_same<blist<true, Bs::value...>, blist<Bs::value..., true>>;
 
+/// helper metafunction for use within `valid_expr` for concept requirement aggregation
 template <typename T>
 auto
 models() -> if_<std::is_same<std::true_type, T>, std::true_type>;

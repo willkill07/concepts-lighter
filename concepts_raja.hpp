@@ -8,10 +8,6 @@ namespace RAJA {
 namespace concepts {
 namespace detail {
 
-using RAJA::concepts::detail::CRef;
-using RAJA::concepts::detail::Ref;
-using RAJA::concepts::detail::Val;
-
 template <typename T>
 using LessThanComparable =
     decltype(valid_expr(convertible_to<bool>(Val<T>() < Val<T>())));
@@ -81,6 +77,7 @@ using RandomAccessIterator =
 
 } // end namespace detail
 
+// pull in relevant concepts from detail
 using detail::Iterator;
 using detail::ForwardIterator;
 using detail::BidirectionalIterator;

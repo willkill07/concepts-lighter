@@ -8,7 +8,6 @@
 
 struct A {};
 
-
 using namespace RAJA::concepts;
 
 // helper alias for extracting value_type from iterator
