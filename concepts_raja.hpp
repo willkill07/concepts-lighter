@@ -1,6 +1,7 @@
 #ifndef RAJA_CONCEPTS_HPP_
 #define RAJA_CONCEPTS_HPP_
 
+#include "metalib.hpp"
 #include "concepts.hpp"
 
 namespace RAJA {
@@ -10,12 +11,6 @@ namespace detail {
 using RAJA::concepts::detail::CRef;
 using RAJA::concepts::detail::Ref;
 using RAJA::concepts::detail::Val;
-
-using RAJA::concepts::detail::meta::convertible_to;
-using RAJA::concepts::detail::meta::has_type;
-using RAJA::concepts::detail::meta::models;
-using RAJA::concepts::detail::meta::returns;
-using RAJA::concepts::detail::meta::valid_expr;
 
 template <typename T>
 using LessThanComparable =
