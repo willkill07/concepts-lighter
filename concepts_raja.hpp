@@ -1,7 +1,6 @@
 #ifndef RAJA_CONCEPTS_HPP_
 #define RAJA_CONCEPTS_HPP_
 
-#include "metalib.hpp"
 #include "concepts.hpp"
 
 namespace concepts_raja {

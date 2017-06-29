@@ -1,8 +1,8 @@
 #ifndef CONCEPTS_HPP_
 #define CONCEPTS_HPP_
 
-#include "metalib.hpp"
-#include "detector.hpp"
+#include "impl/metalib.hpp"
+#include "impl/detector.hpp"
 
 namespace concepts {
 
