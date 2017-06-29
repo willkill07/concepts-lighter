@@ -1,4 +1,7 @@
-#include <type_traits>
+#ifndef CONCEPTS_HPP_
+#define CONCEPTS_HPP_
+
+#include "detector.hpp"
 
 namespace RAJA {
 namespace concepts {
@@ -101,4 +104,10 @@ template <typename T> auto CRef() -> decltype(std::declval<T const &>()) {
 
 } // detail
 } // concepts
+
+template <template <typename...> class Thing, typename ... Args>
+using Requires = is_detected<Thing, Args...>;
+
 } // RAJA
+
+#endif
