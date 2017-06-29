@@ -6,7 +6,12 @@
 
 namespace RAJA {
 namespace concepts {
+
+using namespace ::concepts;
+
 namespace detail {
+
+using namespace ::concepts::detail;
 
 template <typename T>
 using LessThanComparable =

@@ -4,7 +4,6 @@
 #include "metalib.hpp"
 #include "detector.hpp"
 
-namespace RAJA {
 namespace concepts {
 namespace detail {
 
@@ -21,6 +20,11 @@ template <typename T> auto Ref() -> decltype(std::declval<T &>()) {
 /// metafunction to get instance of const reference type for concepts
 template <typename T> auto CRef() -> decltype(std::declval<T const &>()) {
   return std::declval<T const &>();
+}
+
+/// metafunction to get instance of const type for concepts
+template <typename T> auto CRef() -> decltype(std::declval<T const>()) {
+  return std::declval<T const>();
 }
 
 using meta::has_type;
@@ -41,7 +45,5 @@ template <typename ... Args>
 using all_of = meta::all_of_t<Args...>;
 
 } // concepts
-
-} // RAJA
 
 #endif
