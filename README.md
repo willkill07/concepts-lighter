@@ -176,3 +176,9 @@ using Iterator = DefineConcept(
 ```
 
 This is a complete concept definition! Look further up at `ForwardIterator` to see extended implementations using `ref<T>()`, `has_type<T>(expr)`, and `models<Concept>()`.
+
+## License
+
+This software is provided under a dual-license scheme (Boost License + BSD 3-clause)
+
+The Boost License is use for relevant code from `ericneibler/range-v3` while the BSD 3-clause license originates from `LLNL/RAJA`.
