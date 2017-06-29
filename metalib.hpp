@@ -5,7 +5,7 @@
 
 // Adopted from range-v3 and Eric Niebler's meta library
 // Only extracted relevent parts
-namespace meta {
+namespace metalib {
 
 template <typename...>
 struct list;
