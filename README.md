@@ -154,15 +154,15 @@ Let us first look at normal usages:
 
 ```cpp
 Iter i; // we have an instance of Iter
-++i; // preincrement
-*i;  // dereference
+++i; // preincrement -- return type should be Iter&
+*i;  // dereference -- unspecified return type
 ```
 
 Since we are not able to declare any variables in a type definition, we will leverage the `ref<T>()` component provided in this concepts framework:
 
 ```cpp
-++concepts::ref<Iter>(); // preincrement
-*concepts::ref<Iter>();  // dereference
+concepts::has_type<Iter&>(++concepts::ref<Iter>());
+*concepts::ref<Iter>();
 ```
 
 We no longer have any variable definitions, and can easily replace the semicolons of separate statements to be comma-separated for our expression list:
@@ -170,8 +170,8 @@ We no longer have any variable definitions, and can easily replace the semicolon
 ```cpp
 template <typename Iter>
 using Iterator = DefineConcept(
-  ++concepts::ref<Iter>(), // preincrement
-  *concepts::ref<Iter>()   // dereference
+  concepts::has_type<Iter&>(++concepts::ref<Iter>()),
+  *concepts::ref<Iter>()
 );
 ```
 
