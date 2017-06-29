@@ -46,7 +46,7 @@ template <typename T> using Comparable = ComparableTo<T, T>;
 
 template <typename T>
 using Iterator = DefineConcept(
-  *ref<T>(),
+  *val<T>(),
   has_type<T &>(++ref<T>()));
 
 template <typename T>
