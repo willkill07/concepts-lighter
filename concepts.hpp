@@ -42,4 +42,8 @@ using all_of = metalib::all_of_t<Args...>;
 
 } // concepts
 
+/// Convenience macro which wraps `decltype(concepts::valid_expr( ... ))`
+#define DefineConcept(...) \
+  decltype(concepts::valid_expr( __VA_ARGS__ ))
+
 #endif

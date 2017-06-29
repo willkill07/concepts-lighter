@@ -21,9 +21,10 @@ using RandomAccessComparable = concepts::all_of<
 
 // Alternatively here -- this is the "concepts" syntax
 template <typename Iter>
-using RandomAccessComparable2 = decltype(concepts::valid_expr(
+using RandomAccessComparable2 = DefineConcept(
+    // DefineConcept( --- alternatively write out decltype(valid_expr( and add matching rparen
     concepts::models<RAJA::concepts::RandomAccessIterator<Iter>>(),
-    concepts::models<RAJA::concepts::Comparable<Value<Iter>>>()));
+    concepts::models<RAJA::concepts::Comparable<Value<Iter>>>());
 
 #if 0
 
