@@ -26,8 +26,8 @@ template <typename T> auto cref() -> decltype(std::declval<T const &>()) {
   return std::declval<T const &>();
 }
 
-using metalib::has_type;
 using metalib::convertible_to;
+using metalib::has_type;
 using metalib::models;
 using metalib::valid_expr;
 
@@ -38,6 +38,12 @@ using requires_ = is_detected<Thing, Args...>;
 /// metaprogramming concept for SFINAE checking of aggregating concepts
 template <typename ... Args>
 using all_of = metalib::all_of_t<Args...>;
+
+template <typename ... Args>
+using none_of = metalib::none_of_t<Args...>;
+
+template <typename ... Args>
+using any_of = metalib::any_of_t<Args...>;
 
 } // concepts
 

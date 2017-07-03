@@ -63,15 +63,6 @@ using if_ = typename impl::_if_<list<Ts...>>::type;
 template <bool If, typename... Args>
 using if_c = typename impl::_if_<list<bool_<If>, Args...>>::type;
 
-
-// return std::true_type instead of int
-
-template <typename Bool_>
-constexpr auto is_true(Bool_) -> if_c<Bool_::value, std::true_type>;
-
-template <typename Bool_>
-constexpr auto is_false(Bool_) -> if_c<!Bool_::value, std::true_type>;
-
 // concept checking functions
 
 /// metafunction for use within decltype expression to validate aribitrary expressions
@@ -94,29 +85,35 @@ convertible_to(U &&u)
 template <typename T, typename U>
 constexpr auto has_type(U &&) -> if_<std::is_same<T, U>, std::true_type>;
 
-// useful utility to require all to match
-
+/// bool list -- use for {all,none,any}_of metafunctions
 template <bool...>
 struct blist;
 
+/// negation metafunction of a value type
 template <typename T>
-using negate_t = std::integral_constant<bool, !T::value>;
+using negate_t = bool_<!T::value>;
 
+/// all_of metafunction of a value type list -- all must be "true"
 template <bool ... Bs>
 using all_of = std::is_same<blist<true, Bs...>, blist<Bs..., true>>;
 
+/// none_of metafunction of a value type list -- all must be "false"
 template <bool ... Bs>
 using none_of = std::is_same<blist<false, Bs...>, blist<Bs..., false>>;
 
+/// any_of metafunction of a value type list -- at least one must be "true""
 template <bool ... Bs>
 using any_of = negate_t<none_of<Bs...>>;
 
+/// all_of metafunction of a bool list -- all must be "true"
 template <typename... Bs>
 using all_of_t = all_of<Bs::value...>;
 
+/// none_of metafunction of a bool list -- all must be "false"
 template <typename ... Bs>
 using none_of_t = none_of<Bs::value...>;
 
+/// any_of metafunction of a bool list -- at least one must be "true""
 template <typename ... Bs>
 using any_of_t = any_of<Bs::value...>;
 
