@@ -4,6 +4,7 @@
 // load some concepts useful to RAJA
 #include "concepts_raja.hpp"
 
+#include <list>
 #include <vector>
 
 struct A {};
@@ -67,6 +68,9 @@ bool test () {
 
 
 START_TESTS {
+TEST(false, RAJA::concepts::RandomAccessRange, std::list<float>);
+TEST(true, RAJA::concepts::ForwardRange, std::list<float>);
+TEST(true, RAJA::concepts::RandomAccessRange, std::vector<int>);
 TEST(true, RAJA::concepts::RandomAccessIterator, int*);
 TEST(true, RAJA::concepts::RandomAccessIterator, std::vector<int>::iterator);
 TEST(true, RAJA::concepts::Comparable, double);

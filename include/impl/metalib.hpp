@@ -99,9 +99,26 @@ constexpr auto has_type(U &&) -> if_<std::is_same<T, U>, std::true_type>;
 template <bool...>
 struct blist;
 
+template <typename T>
+using negate_t = std::integral_constant<bool, !T::value>;
+
+template <bool ... Bs>
+using all_of = std::is_same<blist<true, Bs...>, blist<Bs..., true>>;
+
+template <bool ... Bs>
+using none_of = std::is_same<blist<false, Bs...>, blist<Bs..., false>>;
+
+template <bool ... Bs>
+using any_of = negate_t<none_of<Bs...>>;
+
 template <typename... Bs>
-using all_of_t =
-    std::is_same<blist<true, Bs::value...>, blist<Bs::value..., true>>;
+using all_of_t = all_of<Bs::value...>;
+
+template <typename ... Bs>
+using none_of_t = none_of<Bs::value...>;
+
+template <typename ... Bs>
+using any_of_t = any_of<Bs::value...>;
 
 /// helper metafunction for use within `valid_expr` for concept requirement aggregation
 template <typename T>

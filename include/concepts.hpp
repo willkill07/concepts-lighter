@@ -29,7 +29,6 @@ template <typename T> auto cref() -> decltype(std::declval<T const &>()) {
 using metalib::has_type;
 using metalib::convertible_to;
 using metalib::models;
-using metalib::returns;
 using metalib::valid_expr;
 
 /// metaprogramming concept for SFINAE checking of concepts

@@ -44,6 +44,10 @@ using ComparableTo = DefineConcept(
 
 template <typename T> using Comparable = ComparableTo<T, T>;
 
+
+template <typename T> using diff_t = decltype(val<T>() - val<T>());
+template <typename T> using iterator_t = decltype(ref<T>().begin());
+
 template <typename T>
 using Iterator = DefineConcept(
   *val<T>(),
@@ -62,17 +66,47 @@ using BidirectionalIterator = DefineConcept(
   convertible_to<T const &>(ref<T>()--),
   *ref<T>()--);
 
-template <typename T> using diff_t = decltype(val<T>() - val<T>());
-
 template <typename T>
 using RandomAccessIterator = DefineConcept(
   models<BidirectionalIterator<T>>(),
+  models<Comparable<T>>(),
   has_type<T &>(ref<T>() += val<diff_t<T>>()),
   has_type<T>(val<T>() + val<diff_t<T>>()),
   has_type<T>(val<diff_t<T>>() + val<T>()),
   has_type<T &>(ref<T>() -= val<diff_t<T>>()),
   has_type<T>(val<T>() - val<diff_t<T>>()),
   val<T>()[val<diff_t<T>>()]);
+
+template <typename T>
+using HasMemberBegin = DefineConcept(ref<T>().begin());
+
+template <typename T>
+using HasMemberEnd = DefineConcept(ref<T>().end());
+
+template <typename T>
+using HasBeginEnd = DefineConcept(
+  models<HasMemberBegin<T>>(),
+  models<HasMemberEnd<T>>());
+
+template <typename T>
+using Range = DefineConcept(
+  models<HasBeginEnd<T>>(),
+  models<Iterator<iterator_t<T>>>());
+
+template <typename T>
+using ForwardRange = DefineConcept(
+  models<HasBeginEnd<T>>(),
+  models<ForwardIterator<iterator_t<T>>>());
+
+template <typename T>
+using BidirectionalRange = DefineConcept(
+  models<HasBeginEnd<T>>(),
+  models<BidirectionalIterator<iterator_t<T>>>());
+
+template <typename T>
+using RandomAccessRange = DefineConcept(
+  models<HasBeginEnd<T>>(),
+  models<RandomAccessIterator<iterator_t<T>>>());
 
 } // end namespace concepts_raja
 
@@ -92,6 +126,11 @@ using ___hidden_concepts_raja::Iterator;
 using ___hidden_concepts_raja::ForwardIterator;
 using ___hidden_concepts_raja::BidirectionalIterator;
 using ___hidden_concepts_raja::RandomAccessIterator;
+
+using ___hidden_concepts_raja::Range;
+using ___hidden_concepts_raja::ForwardRange;
+using ___hidden_concepts_raja::BidirectionalRange;
+using ___hidden_concepts_raja::RandomAccessRange;
 
 } // end namespace concepts
 } // end namespace RAJA
